@@ -23,8 +23,8 @@ local background_image = love.graphics.newImage("sprites/background.png")
 local player_image = love.graphics.newImage("sprites/Soldier.png")
 
 function love.load()
-  player.x = 10 -- change the spawn x position
-  player.y = 10 -- change the spawn y position
+  player.x = 50 -- change the spawn x position
+  player.y = 500 -- change the spawn y position
 -- Generate initial tiles
   for i = 0, love.graphics.getWidth() / tile_size do
     for j = 0, love.graphics.getHeight() / tile_size do
