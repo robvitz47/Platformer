@@ -20,11 +20,46 @@ local tiles = {}
 local tile_size = 50
 local tile_image = love.graphics.newImage("sprites/tile.png")
 local background_image = love.graphics.newImage("sprites/background.png")
-local player_image = love.graphics.newImage("sprites/Soldier.png")
+local player_spritesheet = love.graphics.newImage("sprites/Necromancer.png")
+local spriteWidth = 32
+local spriteHeight = 32
+local quads = {}
+
+  for y = 0, player_spritesheet:getHeight() - spriteHeight, spriteHeight do
+    for x = 0, player_spritesheet:getWidth() - spriteWidth, spriteWidth do
+      table.insert(quads, love.graphics.newQuad(x, y, spriteWidth, spriteHeight, player_spritesheet:getDimensions()))
+  end
+end
+-- Add the Animations table to store animations
+local Animations = {}
+
+function newAnimation(image, width, height, duration)
+  local animation = {}
+  animation.spritesheet = image
+  animation.quads = {}
+  
+  for y = 0, image:getHeight() - height, height do
+    for x = 0, image:getWidth() - width, width do
+      table.insert(animation.quads, love.graphics.newQuad(x, y, width, height, image:getDimensions()))
+    end
+  end
+  
+  animation.duration = duration
+  animation.current_time = 0
+  
+  return animation
+end
+
+-- Create the animations
+Animations.idle = newAnimation(player_spritesheet, 50, 50, 0.1)
+Animations.run = newAnimation(player_spritesheet, 50, 50, 0.1)
+Animations.jump = newAnimation(player_spritesheet, 50, 50, 0.1)
 
 function love.load()
   player.x = 50 -- change the spawn x position
   player.y = 500 -- change the spawn y position
+  player.current_animation = Animations.idle
+
 -- Generate initial tiles
   for i = 0, love.graphics.getWidth() / tile_size do
     for j = 0, love.graphics.getHeight() / tile_size do
@@ -37,22 +72,32 @@ function love.load()
 end
 
 function love.update(dt)
-  -- Check for left arrow key press
+  -- Update the time in the current animation
+  player.current_animation.current_time = player.current_animation.current_time + dt
+  
   if love.keyboard.isDown("left") then
     player.velocity_x = -300
-  -- Check for right arrow key press
-  elseif love.keyboard.isDown("right") then
+    player.current_animation = Animations.run
+elseif love.keyboard.isDown("right") then
     player.velocity_x = 300
-  else
+    player.current_animation = Animations.run
+else
     player.velocity_x = 0
-  end
+    player.current_animation = Animations.idle
+end
 
   player.velocity_y = player.velocity_y or 0
 
-  -- Check for space key press
-  if love.keyboard.isDown("up") then
-    player.velocity_y = -player.jump_speed
+if love.keyboard.isDown("space") then
+    player.state = "jumping"
+  else
+    player.state = "idle"
   end
+
+  player.current_animation.current_time = player.current_animation.current_time + dt
+  if player.current_animation.current_time >= player.current_animation.duration then
+    player.current_animation.current_time = player.current_animation.current_time - player.current_animation.duration
+end
 
   -- Apply gravity
   player.velocity_y = player.velocity_y + player.gravity * dt
@@ -116,18 +161,21 @@ end
   end
 end
 
-
+function love.draw()
+  love.graphics.draw(background_image, 0, 0)
   
-    
-    function love.draw()
-      love.graphics.draw(background_image, 0, 0, 0, love.graphics.getWidth() / background_image:getWidth(), love.graphics.getHeight() / background_image:getHeight()*2)
+  for _, tile in ipairs(tiles) do
+    love.graphics.draw(tile_image, tile.x, tile.y)
+  end
 
-      for i, tile in ipairs(tiles) do
-        if tile.is_box then
-          love.graphics.draw(box_image, tile.x, tile.y, 0, tile_size / box_image:getWidth(), tile_size / box_image:getHeight())
-        else
-          love.graphics.draw(tile_image, tile.x, tile.y, 0, tile_size / tile_image:getWidth(), tile_size / tile_image:getHeight()*12)
-        end
-      end
-      love.graphics.draw(player_image, player.x, player.y, 0, 0.5, 0.5)
-end   
+  if player.state == "idle" then
+    player.current_animation = idle_animation
+  elseif player.state == "jumping" then
+    player.current_animation = jump_animation
+  end
+
+  local spriteNum = math.floor(player.current_animation.current_time / player.current_animation.duration * #player.current_animation.quads) + 1
+  if spriteNum >= 1 and spriteNum <= #player.current_animation.quads then
+    love.graphics.draw(player.current_animation.spritesheet, player.current_animation.quads[spriteNum], player.x, player.y, 0, player.width / width, player.height / height)
+  end
+end
