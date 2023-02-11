@@ -15,7 +15,21 @@ local ground = {
   y = 500
 }
 
-local box_image = love.graphics.newImage("sprites/box.png")
+
+local enemy = {
+  x = 720,
+  y = 400,
+  width = 200,
+  height = 200,
+  image = love.graphics.newImage("sprites/enemy.png")
+}
+
+-- Generate random x position for enemy
+enemy.x = math.random(0, love.graphics.getWidth() - enemy.width)
+
+-- Set y position to the ground
+enemy.y = ground.y
+
 local tiles = {}
 local tile_size = 50
 local tile_image = love.graphics.newImage("sprites/tile.png")
@@ -26,6 +40,7 @@ local background_x = 0
 function love.load()
   player.x = 50 -- change the spawn x position
   player.y = 50 -- change the spawn y position
+  enemy.is_alive = true
 
 -- Generate initial tiles
   for i = 0, love.graphics.getWidth() / tile_size do
@@ -87,6 +102,17 @@ function love.update(dt)
   if player.x + player.width > love.graphics.getWidth() then
     player.x = love.graphics.getWidth() - player.width
   end
+  -- Check if player and enemy are colliding
+  if player.x + player.width >= enemy.x and player.x <= enemy.x + enemy.width and
+    player.y + player.height <= enemy.y and player.y + player.height >= enemy.y - enemy.height then
+
+-- Check if player is hitting enemy from above
+  if player.y + player.height <= enemy.y then
+ -- Kill the enemy
+    enemy.is_alive = false
+  end
+end
+
 end
 function love.draw()
   love.graphics.draw(background_image, 0, 0)
@@ -100,5 +126,8 @@ function love.draw()
   end
 
   love.graphics.draw(knight, player.x, player.y)
+  if enemy.is_alive then
+    love.graphics.draw(enemy.image, enemy.x, enemy.y)
+  end
   love.graphics.pop()
 end
