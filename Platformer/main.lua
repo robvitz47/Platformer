@@ -8,11 +8,12 @@ local player = {
   jump_height = 10,
   jump_speed = 500,
   max_fall_speed = 4000,
-  gravity = 600
+  gravity = 600,
+  speed = 100
 }
 
 local ground = {
-  y = 500
+  y = 750
 }
 
 
@@ -21,14 +22,10 @@ local enemy = {
   y = 400,
   width = 200,
   height = 200,
-  image = love.graphics.newImage("sprites/enemy.png")
+  image = love.graphics.newImage("sprites/enemy.png"),
+  scored = false
 }
 
--- Generate random x position for enemy
-enemy.x = math.random(0, love.graphics.getWidth() - enemy.width)
-
--- Set y position to the ground
-enemy.y = ground.y
 
 local tiles = {}
 local tile_size = 50
@@ -36,11 +33,18 @@ local tile_image = love.graphics.newImage("sprites/tile.png")
 local background_image = love.graphics.newImage("sprites/background.png")
 local knight = love.graphics.newImage("sprites/knight.png")
 local background_x = 0
+score = 0
 
 function love.load()
   player.x = 50 -- change the spawn x position
   player.y = 50 -- change the spawn y position
   enemy.is_alive = true
+
+  -- Generate random x position for enemy
+  enemy.x = math.random(0, love.graphics.getWidth() - enemy.width)
+
+-- Set y position to the ground
+  enemy.y = ground.y + enemy.height - 275
 
 -- Generate initial tiles
   for i = 0, love.graphics.getWidth() / tile_size do
@@ -85,7 +89,13 @@ function love.update(dt)
       }
     end
   end
-
+  if love.keyboard.isDown("a") then
+    player.velocity_x = player.velocity_x - player.speed * dt
+  elseif love.keyboard.isDown("d") then
+    player.velocity_x = player.velocity_x + player.speed * dt
+  else
+    player.velocity_x = 0
+  end
   if love.keyboard.isDown("space") then
     player.velocity_y = -player.jump_speed
     player.state = "jumping"
@@ -97,28 +107,45 @@ function love.update(dt)
   if player.x < 0 then
     player.x = 0
   end
+  if not enemy.scored and player.x + player.width >= enemy.x and player.x <= enemy.x + enemy.width and
+  player.y + player.height <= enemy.y and player.y + player.height >= enemy.y - enemy.height then
 
-  -- Prevent player from running off the right side of the screen
-  if player.x + player.width > love.graphics.getWidth() then
-    player.x = love.graphics.getWidth() - player.width
-  end
-  -- Check if player and enemy are colliding
-  if player.x + player.width >= enemy.x and player.x <= enemy.x + enemy.width and
-    player.y + player.height <= enemy.y and player.y + player.height >= enemy.y - enemy.height then
-
--- Check if player is hitting enemy from above
+  -- Check if player is hitting enemy from above
   if player.y + player.height <= enemy.y then
- -- Kill the enemy
-    enemy.is_alive = false
+    if enemy.is_alive then
+      -- Kill the enemy
+      enemy.is_alive = false
+
+      -- Set the enemy's `scored` flag to `true`
+      enemy.scored = true
+    end
   end
 end
 
+if not enemy.is_alive then
+  enemy.x = player.x
+  enemy.y = ground.y - 80
+  enemy.is_alive = true
+  if enemy.scored then
+    -- Increment the score if the enemy has been scored
+    score = score + 1
+    -- Reset the `scored` flag to `false`
+    enemy.scored = false
+  end
+end
+  if not enemy.is_alive then
+    enemy.x = player.x
+    enemy.y = ground.y - 80
+    enemy.is_alive = true
+    score = score + 1
+  end
 end
 function love.draw()
   love.graphics.draw(background_image, 0, 0)
   love.graphics.draw(background_image, (background_x % background_image:getWidth()), 0)
 
   love.graphics.push()
+    love.graphics.print("Score: " .. score, 10, 10)
   love.graphics.scale(0.5, 0.5)
 
   for i, tile in ipairs(tiles) do
