@@ -34,9 +34,16 @@ local tile_image = love.graphics.newImage("sprites/tile.png")
 local background_image = love.graphics.newImage("sprites/background.png")
 local knight = love.graphics.newImage("sprites/knight.png")
 local background_x = 0
+local jump_sound = love.audio.newSource("sprites/jump.wav", "static")
+local enemy_hit = love.audio.newSource("sprites/hit_damage.wav", "static")
+local background_music = love.audio.newSource("sprites/background_music.wav", "static")
 score = 0
 
+local start_screen = true
+
 function love.load()
+  background_music:play()
+  background_music:setLooping(true)
   player.x = 100 -- change the spawn x position
   player.y = 100 -- change the spawn y position
   enemy.is_alive = true
@@ -45,7 +52,7 @@ function love.load()
   enemy.x = 500
 
 -- Set y position to the ground
-  enemy.y = ground.y + enemy.height - 100
+  enemy.y = ground.y + enemy.height - 65
 
 -- Generate initial tiles
   for i = 0, love.graphics.getWidth() / tile_size do
@@ -59,6 +66,13 @@ function love.load()
 end
 
 function love.update(dt)
+  if start_screen then
+    if love.keyboard.isDown("return") then
+      start_screen = false
+    end
+    return
+  end
+
   player.state = "running"
 
   -- Apply gravity
@@ -100,6 +114,7 @@ function love.update(dt)
   if love.keyboard.isDown("space") then
     player.velocity_y = -player.jump_speed
     player.state = "jumping"
+    jump_sound:play()
   end
 
   background_x = background_x + dt * 100
@@ -119,13 +134,16 @@ function love.update(dt)
 
       -- Set the enemy's `scored` flag to `true`
       enemy.scored = true
+
+      --play sound 
+      enemy_hit:play()
     end
   end
 end
 
 if not enemy.is_alive then
   enemy.x = math.random(0, love.graphics.getWidth() - enemy.width)
-  enemy.y = ground.y + enemy.height - 100
+  enemy.y = ground.y + enemy.height - 65
   enemy.is_alive = true
   if enemy.scored then
     -- Increment the score if the enemy has been scored
@@ -142,6 +160,11 @@ end
   end
 end
 function love.draw()
+  if start_screen then
+    -- display the start screen
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.printf("Press any key to start the game!", 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
+  else
   love.graphics.draw(background_image, 0, 0)
   love.graphics.draw(background_image, (background_x % background_image:getWidth()), 0)
 
@@ -158,4 +181,5 @@ function love.draw()
     love.graphics.draw(enemy.image, enemy.x, enemy.y)
   end
   love.graphics.pop()
+end
 end
