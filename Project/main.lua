@@ -185,7 +185,7 @@ function love.draw()
   for i, tile in ipairs(tiles) do
     love.graphics.draw(tile_image, tile.x - (background_x % tile_size), tile.y)
   end
-
+  love.graphics.scale(1, 1)
   love.graphics.draw(knight, player.x, player.y)
   if enemy.is_alive then
     love.graphics.draw(enemy.image, enemy.x, enemy.y)
