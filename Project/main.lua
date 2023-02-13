@@ -1,8 +1,8 @@
 local player = {
-  x = 50,
-  y = 50,
-  width = 50,
-  height = 50,
+  x = 100,
+  y = 100,
+  width = 20,
+  height = 20,
   velocity_x = 300,
   velocity_y = 0,
   jump_height = 10,
@@ -13,17 +13,18 @@ local player = {
 }
 
 local ground = {
-  y = 750
+  y = 735
 }
 
 
 local enemy = {
-  x = 720,
+  x = 400,
   y = 400,
-  width = 200,
-  height = 200,
+  width = 30,
+  height = 30,
   image = love.graphics.newImage("sprites/enemy.png"),
-  scored = false
+  scored = false,
+  is_alive = true
 }
 
 
@@ -36,15 +37,15 @@ local background_x = 0
 score = 0
 
 function love.load()
-  player.x = 50 -- change the spawn x position
-  player.y = 50 -- change the spawn y position
+  player.x = 100 -- change the spawn x position
+  player.y = 100 -- change the spawn y position
   enemy.is_alive = true
 
   -- Generate random x position for enemy
-  enemy.x = math.random(0, love.graphics.getWidth() - enemy.width)
+  enemy.x = 500
 
 -- Set y position to the ground
-  enemy.y = ground.y + enemy.height - 275
+  enemy.y = ground.y + enemy.height - 100
 
 -- Generate initial tiles
   for i = 0, love.graphics.getWidth() / tile_size do
@@ -123,8 +124,8 @@ function love.update(dt)
 end
 
 if not enemy.is_alive then
-  enemy.x = player.x
-  enemy.y = ground.y - 80
+  enemy.x = math.random(0, love.graphics.getWidth() - enemy.width)
+  enemy.y = ground.y + enemy.height - 100
   enemy.is_alive = true
   if enemy.scored then
     -- Increment the score if the enemy has been scored
@@ -134,8 +135,8 @@ if not enemy.is_alive then
   end
 end
   if not enemy.is_alive then
-    enemy.x = player.x
-    enemy.y = ground.y - 80
+    enemy.x = math.random(0, love.graphics.getWidth() - enemy.width)
+    enemy.y = ground.y + enemy.height - 100
     enemy.is_alive = true
     score = score + 1
   end
