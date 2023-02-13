@@ -40,6 +40,7 @@ local background_music = love.audio.newSource("sprites/background_music.wav", "s
 score = 0
 
 local start_screen = true
+local is_paused = false
 
 function love.load()
   background_music:play()
@@ -70,6 +71,10 @@ function love.update(dt)
     if love.keyboard.isDown("return") then
       start_screen = false
     end
+    return
+  end
+
+  if is_paused then
     return
   end
 
@@ -158,7 +163,12 @@ end
     enemy.is_alive = true
     score = score + 1
   end
-end
+    function love.keypressed(key)
+      if key == "p" then
+        is_paused = not is_paused
+      end
+    end
+  end
 function love.draw()
   if start_screen then
     -- display the start screen
@@ -182,4 +192,12 @@ function love.draw()
   end
   love.graphics.pop()
 end
+  if is_paused then
+    drawPauseMenu()
+  end
+end
+
+function drawPauseMenu()
+  love.graphics.setColor(255, 255, 255)
+  love.graphics.printf("Game Paused", 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
 end
