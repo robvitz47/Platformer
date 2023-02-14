@@ -37,15 +37,6 @@ local enemy2 = {
   is_alive = false
 }
 
-local button = {
-  font = love.graphics.newFont(),
-  button_text = "Start",
-  button_width = 200,
-  button_height = 100,
-  button_x = love.graphics.getWidth() / 2 - 100,
-  button_y = love.graphics.getHeight() / 2 - 50
-}
-
 local tiles = {}
 local tile_size = 50
 local tile_image = love.graphics.newImage("sprites/tile.png")
@@ -57,10 +48,12 @@ local enemy_hit = love.audio.newSource("sprites/hit_damage.wav", "static")
 local boss_hit = love.audio.newSource("sprites/boss_hit.wav", "static")
 local background_music = love.audio.newSource("sprites/background_music.wav", "static")
 score = 0
-local start_screen = true
+local start_screen = false
 local is_paused = false
 local enemy2_timer = 10  -- enemy2 will appear every 10 seconds
 local enemy2_delay = enemy2_timer
+local dt = 0
+local font = love.graphics.newFont()
 
 function love.load()
   background_music:play()
@@ -95,16 +88,6 @@ function love.update(dt)
     enemy2.y = ground.y + enemy2.height - 65
     enemy2.is_alive = true
     enemy2_delay = enemy2_timer
-  end
-
-  if button == 1 and
-  x >= button.button_x and
-  x <= button.button_x + button.button_width and
-  y >= button.button_y and
-  y <= button.button_y + button.button_height then
-      start_screen = false
-  end
-    return
   end
 
   if is_paused then
@@ -215,26 +198,14 @@ function love.keypressed(key)
     is_paused = not is_paused
   end
 end
+end
 
 function love.draw()
-    love.graphics.setColor(1, 0, 0)
-    love.graphics.rectangle("fill", button.button_x, button.button_y, button.button_width, button.button_height)
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.setFont(button.font, 32)
-    love.graphics.print(button.button_text, button.button_x + button.button_width / 2 - button.font:getWidth(button.button_text) / 2, button.button_y + button.button_height / 2 - button.font:getHeight(button.button_text) / 2)
-  end
- -- Check if the button has been clicked
-local mouse_x, mouse_y = love.mouse.getPosition()
-
-if love.mouse.isDown(1) and mouse_x >= button_x and mouse_x <= button_x + button_width and
- mouse_y >= button_y and mouse_y <= button_y + button_height then
-   start_screen = false
-end
   love.graphics.draw(background_image, 0, 0)
   love.graphics.draw(background_image, (background_x % background_image:getWidth()), 0)
 
   love.graphics.push()
-  love.graphics.setFont(button.font)  
+  love.graphics.setFont(font)  
   love.graphics.print("Score: " .. score, 10, 10)
   love.graphics.scale(0.5, 0.5)
 
@@ -254,6 +225,7 @@ end
   if is_paused then
     drawPauseMenu()
   end
+end
 function drawPauseMenu()
   love.graphics.setColor(255, 255, 255)
   love.graphics.printf("Game Paused", 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
