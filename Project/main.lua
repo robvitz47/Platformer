@@ -27,6 +27,17 @@ local enemy = {
   is_alive = true
 }
 
+local enemy2 = {
+  x = 400,
+  y = 400,
+  width = 30,
+  height = 30,
+  image = love.graphics.newImage("sprites/enemy2.png"),
+  scored = false,
+  is_alive = false
+}
+
+
 
 local tiles = {}
 local tile_size = 50
@@ -36,11 +47,14 @@ local knight = love.graphics.newImage("sprites/knight.png")
 local background_x = 0
 local jump_sound = love.audio.newSource("sprites/jump.wav", "static")
 local enemy_hit = love.audio.newSource("sprites/hit_damage.wav", "static")
+local boss_hit = love.audio.newSource("sprites/boss_hit.wav", "static")
 local background_music = love.audio.newSource("sprites/background_music.wav", "static")
 score = 0
-
+local score_font = love.graphics.newFont(32)
 local start_screen = true
 local is_paused = false
+local enemy2_timer = 10  -- enemy2 will appear every 10 seconds
+local enemy2_delay = enemy2_timer
 
 function love.load()
   background_music:play()
@@ -67,6 +81,16 @@ function love.load()
 end
 
 function love.update(dt)
+  enemy2_delay = enemy2_delay - dt
+
+  -- Check if the timer has elapsed
+  if enemy2_delay <= 0 then
+    enemy2.x = math.random(0, love.graphics.getWidth() - enemy2.width)
+    enemy2.y = ground.y + enemy2.height - 65
+    enemy2.is_alive = true
+    enemy2_delay = enemy2_timer
+  end
+
   if start_screen then
     if love.keyboard.isDown("return") then
       start_screen = false
@@ -131,25 +155,45 @@ function love.update(dt)
   if not enemy.scored and player.x + player.width >= enemy.x and player.x <= enemy.x + enemy.width and
   player.y + player.height <= enemy.y and player.y + player.height >= enemy.y - enemy.height then
 
-  -- Check if player is hitting enemy from above
-  if player.y + player.height <= enemy.y then
-    if enemy.is_alive then
-      -- Kill the enemy
-      enemy.is_alive = false
+    -- Check if player is hitting enemy from above
+    if player.y + player.height <= enemy.y then
+      if enemy.is_alive then
+        -- Kill the enemy
+        enemy.is_alive = false
 
-      -- Set the enemy's `scored` flag to `true`
-      enemy.scored = true
+        -- Set the enemy's `scored` flag to `true`
+        enemy.scored = true
 
-      --play sound 
-      enemy_hit:play()
+        --play sound 
+        enemy_hit:play()
+      end
     end
   end
-end
 
+  if not enemy2.scored and player.x + player.width >= enemy2.x and player.x <= enemy2.x + enemy2.width and
+  player.y + player.height <= enemy2.y and player.y + player.height >= enemy2.y - enemy2.height then
+
+    -- Check if player is hitting enemy from above
+    if player.y + player.height <= enemy2.y then
+      if enemy2.is_alive then
+        -- Kill the enemy2
+        enemy2.is_alive = false
+  
+        -- Set the enemy2's `scored` flag to `true`
+        enemy2.scored = true
+
+        score = score + 2
+  
+        -- play sound
+        boss_hit:play()
+      end
+    end
+  end
 if not enemy.is_alive then
   enemy.x = math.random(0, love.graphics.getWidth() - enemy.width)
   enemy.y = ground.y + enemy.height - 65
   enemy.is_alive = true
+end
   if enemy.scored then
     -- Increment the score if the enemy has been scored
     score = score + 1
@@ -157,29 +201,24 @@ if not enemy.is_alive then
     enemy.scored = false
   end
 end
-  if not enemy.is_alive then
-    enemy.x = math.random(0, love.graphics.getWidth() - enemy.width)
-    enemy.y = ground.y + enemy.height - 100
-    enemy.is_alive = true
-    score = score + 1
+function love.keypressed(key)
+  if key == "p" then
+    is_paused = not is_paused
   end
-    function love.keypressed(key)
-      if key == "p" then
-        is_paused = not is_paused
-      end
-    end
-  end
+end
 function love.draw()
   if start_screen then
     -- display the start screen
     love.graphics.setColor(1, 1, 1)
-    love.graphics.printf("Press any key to start the game!", 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
+    love.graphics.setFont(score_font)
+    love.graphics.printf("Press ENTER to start the game!", 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
   else
   love.graphics.draw(background_image, 0, 0)
   love.graphics.draw(background_image, (background_x % background_image:getWidth()), 0)
 
   love.graphics.push()
-    love.graphics.print("Score: " .. score, 10, 10)
+  love.graphics.setFont(score_font)  
+  love.graphics.print("Score: " .. score, 10, 10)
   love.graphics.scale(0.5, 0.5)
 
   for i, tile in ipairs(tiles) do
@@ -189,6 +228,9 @@ function love.draw()
   love.graphics.draw(knight, player.x, player.y)
   if enemy.is_alive then
     love.graphics.draw(enemy.image, enemy.x, enemy.y)
+  end
+  if enemy2.is_alive then
+    love.graphics.draw(enemy2.image, enemy2.x, enemy2.y)
   end
   love.graphics.pop()
 end
