@@ -37,6 +37,8 @@ local enemy2 = {
   is_alive = false
 }
 
+local highscore = 0
+
 local tiles = {}
 local tile_size = 50
 local tile_image = love.graphics.newImage("sprites/tile.png")
@@ -47,7 +49,8 @@ local jump_sound = love.audio.newSource("sprites/jump.wav", "static")
 local enemy_hit = love.audio.newSource("sprites/hit_damage.wav", "static")
 local boss_hit = love.audio.newSource("sprites/boss_hit.wav", "static")
 local background_music = love.audio.newSource("sprites/background_music.wav", "static")
-score = 0
+local score_value = 0
+local score = {name = "", score_value}
 local start_screen = false
 local is_paused = false
 local enemy2_timer = 10  -- enemy2 will appear every 10 seconds
@@ -158,9 +161,16 @@ if not enemy.scored and player.x + player.width >= enemy.x and player.x <= enemy
 
         --play sound 
         enemy_hit:play()
+           -- Update the score and the high scores
+      score.value = score.value + 1
+      high_scores[#high_scores + 1] = {name = score.name, value = score.value}
+      table.sort(high_scores, function(a, b) return a.value > b.value end)
+      if #high_scores > 10 then
+        table.remove(high_scores)
       end
     end
   end
+end
 
   if not enemy2.scored and player.x + player.width >= enemy2.x and player.x <= enemy2.x + enemy2.width and
   player.y + player.height <= enemy2.y and player.y + player.height >= enemy2.y - enemy2.height then
@@ -180,6 +190,9 @@ if not enemy.scored and player.x + player.width >= enemy.x and player.x <= enemy
         boss_hit:play()
       end
     end
+    if score.value > highscore then
+      highscore = score.value
+    end
   end
 if not enemy.is_alive then
   enemy.x = math.random(0, love.graphics.getWidth() - enemy.width)
@@ -197,7 +210,11 @@ function love.keypressed(key)
   if key == "p" then
     is_paused = not is_paused
   end
-end
+  function love.keypressed(key)
+    if key == "tab" then
+      is_paused = not is_paused
+    end
+  end
 end
 
 function love.draw()
@@ -206,7 +223,13 @@ function love.draw()
 
   love.graphics.push()
   love.graphics.setFont(font)  
-  love.graphics.print("Score: " .. score, 10, 10)
+  love.graphics.print("Score: " .. score_value, 10, 10)
+
+  -- Check if the player has pressed the tab key
+  if love.keyboard.isDown("tab") then
+    love.graphics.print("High Score: " .. highscore, 10, 30)
+  end
+
   love.graphics.scale(0.5, 0.5)
 
   for i, tile in ipairs(tiles) do
@@ -220,13 +243,17 @@ function love.draw()
   if enemy2.is_alive then
     love.graphics.draw(enemy2.image, enemy2.x, enemy2.y)
   end
+
+
   love.graphics.pop()
 
   if is_paused then
     drawPauseMenu()
   end
 end
+
 function drawPauseMenu()
   love.graphics.setColor(255, 255, 255)
   love.graphics.printf("Game Paused", 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
+end
 end
