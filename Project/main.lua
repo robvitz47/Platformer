@@ -212,11 +212,6 @@ function love.keypressed(key)
   if key == "p" then
     is_paused = not is_paused
   end
-  function love.keypressed(key)
-    if key == "tab" then
-      is_paused = not is_paused
-    end
-  end
 end
 
 function love.draw()
