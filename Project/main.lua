@@ -36,8 +36,13 @@ local enemy2 = {
   scored = false,
   is_alive = false
 }
-
-local highscore = 0
+local high_score_value = 0
+local high_scores = {}
+local score_value = 0
+local score = {
+  name = "",
+  value = score_value
+}
 
 local tiles = {}
 local tile_size = 50
@@ -49,13 +54,10 @@ local jump_sound = love.audio.newSource("sprites/jump.wav", "static")
 local enemy_hit = love.audio.newSource("sprites/hit_damage.wav", "static")
 local boss_hit = love.audio.newSource("sprites/boss_hit.wav", "static")
 local background_music = love.audio.newSource("sprites/background_music.wav", "static")
-local score_value = 0
-local score = {name = "", score_value}
 local start_screen = false
 local is_paused = false
 local enemy2_timer = 10  -- enemy2 will appear every 10 seconds
 local enemy2_delay = enemy2_timer
-local dt = 0
 local font = love.graphics.newFont()
 
 function love.load()
@@ -96,8 +98,6 @@ function love.update(dt)
   if is_paused then
     return
   end
-
-  player.state = "running"
 
   -- Apply gravity
   player.velocity_y = player.velocity_y + player.gravity * dt
@@ -161,16 +161,18 @@ if not enemy.scored and player.x + player.width >= enemy.x and player.x <= enemy
 
         --play sound 
         enemy_hit:play()
-           -- Update the score and the high scores
-      score.value = score.value + 1
-      high_scores[#high_scores + 1] = {name = score.name, value = score.value}
-      table.sort(high_scores, function(a, b) return a.value > b.value end)
-      if #high_scores > 10 then
+-- Update the score and the high scores
+        score_value = score_value + 1
+        high_scores[#high_scores + 1] = {name = score.name, value = score.value}
+        table.sort(high_scores, function(a, b) return a.value > b.value end)
+        if #high_scores > 10 then
         table.remove(high_scores)
+        end
       end
     end
   end
-end
+end 
+
 
   if not enemy2.scored and player.x + player.width >= enemy2.x and player.x <= enemy2.x + enemy2.width and
   player.y + player.height <= enemy2.y and player.y + player.height >= enemy2.y - enemy2.height then
@@ -227,7 +229,7 @@ function love.draw()
 
   -- Check if the player has pressed the tab key
   if love.keyboard.isDown("tab") then
-    love.graphics.print("High Score: " .. highscore, 10, 30)
+    love.graphics.print("High Score: " .. high_score_value, 10, 30)
   end
 
   love.graphics.scale(0.5, 0.5)
@@ -255,5 +257,4 @@ end
 function drawPauseMenu()
   love.graphics.setColor(255, 255, 255)
   love.graphics.printf("Game Paused", 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
-end
 end
