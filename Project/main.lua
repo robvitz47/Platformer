@@ -59,6 +59,7 @@ local is_paused = false
 local enemy2_timer = 10  -- enemy2 will appear every 10 seconds
 local enemy2_delay = enemy2_timer
 local font = love.graphics.newFont()
+local level = 1
 
 function love.load()
   background_music:play()
@@ -85,11 +86,16 @@ function love.load()
 end
 
 function love.update(dt)
+  if score_value >= 10 then
+    level = level + 1
+    score_value = 0
+  end
+  
   enemy2_delay = enemy2_delay - dt
 
   -- Check if the timer has elapsed
   if enemy2_delay <= 0 then
-    enemy2.x = math.random(0, love.graphics.getWidth() - enemy2.width)
+    enemy2.x = math.random(0, love.graphics.getWidth() - enemy2.width) * 2.5
     enemy2.y = ground.y + enemy2.height - 65
     enemy2.is_alive = true
     enemy2_delay = enemy2_timer
@@ -147,7 +153,7 @@ function love.update(dt)
   if player.x < 0 then
     player.x = 0
   end
-if not enemy.scored and player.x + player.width >= enemy.x and player.x <= enemy.x + enemy.width and
+  if not enemy.scored and player.x + player.width >= enemy.x and player.x <= enemy.x + enemy.width and
   player.y + player.height <= enemy.y and player.y + player.height >= enemy.y - enemy.height then
 
     -- Check if player is hitting enemy from above
@@ -161,41 +167,35 @@ if not enemy.scored and player.x + player.width >= enemy.x and player.x <= enemy
 
         --play sound 
         enemy_hit:play()
--- Update the score and the high scores
-        score_value = score_value + 1
-        high_scores[#high_scores + 1] = {name = score.name, value = score.value}
-        table.sort(high_scores, function(a, b) return a.value > b.value end)
-        if #high_scores > 10 then
-        table.remove(high_scores)
-        end
+
+        -- Update the score and the high scores
+        score_value = score_value + 0
+        high_scores[#high_scores + 1] = score_value
       end
-    end
   end
-end 
+end
 
-
-  if not enemy2.scored and player.x + player.width >= enemy2.x and player.x <= enemy2.x + enemy2.width and
+if not enemy2.scored and player.x + player.width >= enemy2.x and player.x <= enemy2.x + enemy2.width and
   player.y + player.height <= enemy2.y and player.y + player.height >= enemy2.y - enemy2.height then
 
-    -- Check if player is hitting enemy from above
-    if player.y + player.height <= enemy2.y then
+    -- Check if player is hitting enemy2 from above
+  if player.y + player.height <= enemy2.y then
       if enemy2.is_alive then
         -- Kill the enemy2
         enemy2.is_alive = false
-  
+
         -- Set the enemy2's `scored` flag to `true`
         enemy2.scored = true
 
-        score = score + 2
-  
-        -- play sound
-        boss_hit:play()
+        --play sound 
+        enemy_hit:play()
+
+        -- Update the score and the high scores
+        score_value = score_value + 2
+        high_scores[#high_scores + 2] = score_value
       end
-    end
-    if score.value > highscore then
-      highscore = score.value
-    end
   end
+end
 if not enemy.is_alive then
   enemy.x = math.random(0, love.graphics.getWidth() - enemy.width)
   enemy.y = ground.y + enemy.height - 65
@@ -203,7 +203,7 @@ if not enemy.is_alive then
 end
 if enemy.scored then
     -- Increment the score if the enemy has been scored
-    score = score + 1
+    score_value = score_value + 1
     -- Reset the `scored` flag to `false`
     enemy.scored = false
 end
@@ -252,4 +252,5 @@ end
 function drawPauseMenu()
   love.graphics.setColor(255, 255, 255)
   love.graphics.printf("Game Paused", 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
+end
 end
